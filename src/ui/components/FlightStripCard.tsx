@@ -6,9 +6,10 @@ import { formatZuluTime, formatFlightLevel } from '../../utils/helpers';
 interface FlightStripCardProps {
   strip: FlightStrip;
   index: number;
+  onDoubleClick?: (strip: FlightStrip) => void;
 }
 
-export default function FlightStripCard({ strip, index }: FlightStripCardProps) {
+export default function FlightStripCard({ strip, index, onDoubleClick }: FlightStripCardProps) {
   const { selectedStripId, selectStrip, startDragging, endDragging, highlightedStripIds } = useFlightStore();
 
   const isSelected = selectedStripId === strip.id;
@@ -65,6 +66,12 @@ export default function FlightStripCard({ strip, index }: FlightStripCardProps) 
     selectStrip(isSelected ? null : strip.id);
   };
 
+  const handleDoubleClick = () => {
+    if (onDoubleClick) {
+      onDoubleClick(strip);
+    }
+  };
+
   const handleDragStart = (e: React.DragEvent) => {
     startDragging(strip.id);
     e.dataTransfer.effectAllowed = 'move';
@@ -78,6 +85,7 @@ export default function FlightStripCard({ strip, index }: FlightStripCardProps) 
     <div
       className={`strip ${stripTypeClass} ${isSelected ? 'selected' : ''} ${isHighlighted ? 'highlighted' : ''} ${strip.isGhost ? 'ghost' : ''}`}
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}

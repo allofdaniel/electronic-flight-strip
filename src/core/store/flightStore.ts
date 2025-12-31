@@ -291,6 +291,14 @@ export const useFlightStore = create<FlightState>()(
       },
 
       loadSampleData: () => {
+        // Clear existing strips first to prevent duplicates
+        set({
+          strips: new Map(),
+          stripsByBay: new Map(),
+          selectedStripId: null,
+          highlightedStripIds: new Set(),
+        });
+
         const { addStrip } = get();
         const now = new Date();
 

@@ -3,7 +3,10 @@ import BayContainer from '../components/BayContainer';
 import AlertPanel from '../components/AlertPanel';
 import TimelinePanel from '../components/TimelinePanel';
 import ToolsPanel from '../components/ToolsPanel';
+import ClearanceModal from '../components/ClearanceModal';
 import { useSystemStore } from '../../core/store/systemStore';
+import { useFlightStore } from '../../core/store/flightStore';
+import type { FlightStrip } from '../../types/index';
 
 type ViewMode = 'strips' | 'timeline' | 'split';
 
@@ -11,7 +14,18 @@ export default function MainLayout() {
   const [viewMode, setViewMode] = useState<ViewMode>('strips');
   const [showAlerts, setShowAlerts] = useState(true);
   const [showTools, setShowTools] = useState(true);
+  const [modalStrip, setModalStrip] = useState<FlightStrip | null>(null);
   const { unacknowledgedAlertCount } = useSystemStore();
+  const { selectStrip } = useFlightStore();
+
+  const handleStripDoubleClick = (strip: FlightStrip) => {
+    setModalStrip(strip);
+  };
+
+  const handleCloseModal = () => {
+    setModalStrip(null);
+    selectStrip(null);
+  };
 
   return (
     <div className="flex h-[calc(100vh-3rem)]">
@@ -70,7 +84,7 @@ export default function MainLayout() {
         <div className="flex-1 overflow-hidden">
           {viewMode === 'strips' && (
             <div className="h-full overflow-x-auto">
-              <BayContainer />
+              <BayContainer onStripDoubleClick={handleStripDoubleClick} />
             </div>
           )}
 
@@ -83,7 +97,7 @@ export default function MainLayout() {
           {viewMode === 'split' && (
             <div className="h-full flex">
               <div className="flex-1 overflow-x-auto border-r border-atc-surface">
-                <BayContainer />
+                <BayContainer onStripDoubleClick={handleStripDoubleClick} />
               </div>
               <div className="w-96">
                 <TimelinePanel />
@@ -98,6 +112,11 @@ export default function MainLayout() {
         <aside className="w-80 bg-atc-panel border-l border-atc-surface flex flex-col">
           <AlertPanel />
         </aside>
+      )}
+
+      {/* Clearance Modal */}
+      {modalStrip && (
+        <ClearanceModal strip={modalStrip} onClose={handleCloseModal} />
       )}
     </div>
   );

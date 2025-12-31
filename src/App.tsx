@@ -1,11 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSystemStore } from './core/store/systemStore';
 import { useFlightStore } from './core/store/flightStore';
 import MainLayout from './ui/views/MainLayout';
+import { simulationEngine } from './services/SimulationEngine';
 
 function App() {
-  const { initializeSystem, operationalMode } = useSystemStore();
+  const { initializeSystem, operationalMode, simulationSpeed, setSimulationSpeed } = useSystemStore();
   const { loadSampleData } = useFlightStore();
+  const [isSimRunning, setIsSimRunning] = useState(false);
+
+  const toggleSimulation = useCallback(() => {
+    if (isSimRunning) {
+      simulationEngine.stop();
+      setIsSimRunning(false);
+    } else {
+      simulationEngine.start();
+      setIsSimRunning(true);
+    }
+  }, [isSimRunning]);
+
+  const handleSpeedChange = useCallback((speed: number) => {
+    setSimulationSpeed(speed);
+  }, [setSimulationSpeed]);
 
   useEffect(() => {
     // Initialize system with default configuration
@@ -46,6 +62,36 @@ function App() {
           <span className="text-sm text-gray-400">Electronic Flight Strip System</span>
         </div>
         <div className="flex items-center gap-4">
+          {/* Simulation Controls */}
+          <div className="flex items-center gap-2 border-r border-atc-surface pr-4">
+            <button
+              onClick={toggleSimulation}
+              className={`px-3 py-1 text-xs font-bold rounded transition-colors ${
+                isSimRunning
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-green-600 hover:bg-green-700 text-white'
+              }`}
+            >
+              {isSimRunning ? 'STOP' : 'START'}
+            </button>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">Speed:</span>
+              {[1, 2, 5, 10].map((speed) => (
+                <button
+                  key={speed}
+                  onClick={() => handleSpeedChange(speed)}
+                  className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                    simulationSpeed === speed
+                      ? 'bg-atc-accent text-black'
+                      : 'bg-atc-surface text-gray-300 hover:bg-atc-panel'
+                  }`}
+                >
+                  {speed}x
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500">Mode:</span>
             <span className={`text-xs px-2 py-0.5 rounded ${

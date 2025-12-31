@@ -2,19 +2,29 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FlightStripCard from './FlightStripCard';
 import { useFlightStore } from '../../core/store/flightStore';
-import type { BayType } from '../../types/index';
+import type { BayType, FlightStrip } from '../../types/index';
 
 interface BayProps {
   id: string;
   name: string;
   type: BayType;
   runway?: string;
+  onStripDoubleClick?: (strip: FlightStrip) => void;
 }
 
-export default function Bay({ id, name, type, runway }: BayProps) {
-  const { getStripsByBay, dropTargetBayId, setDropTarget, moveStripToBay, endDragging, draggingStripId } = useFlightStore();
+export default function Bay({ id, name, type, runway, onStripDoubleClick }: BayProps) {
+  const { dropTargetBayId, setDropTarget, moveStripToBay, endDragging, draggingStripId } = useFlightStore();
 
-  const strips = useMemo(() => getStripsByBay(id), [id, getStripsByBay]);
+  // Subscribe to strips and stripsByBay directly to properly react to changes
+  const allStrips = useFlightStore((state) => state.strips);
+  const stripsByBay = useFlightStore((state) => state.stripsByBay);
+
+  const strips = useMemo(() => {
+    const stripIds = stripsByBay.get(id) || [];
+    return stripIds
+      .map((stripId) => allStrips.get(stripId))
+      .filter((s): s is FlightStrip => s !== undefined);
+  }, [id, allStrips, stripsByBay]);
 
   const isDropTarget = dropTargetBayId === id;
 
@@ -66,18 +76,13 @@ export default function Bay({ id, name, type, runway }: BayProps) {
 
       {/* Bay Content */}
       <div className="bay-content">
-        <AnimatePresence mode="popLayout">
-          {strips.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-center h-20 text-gray-500 text-sm"
-            >
-              No strips
-            </motion.div>
-          ) : (
-            strips.map((strip, index) => (
+        {strips.length === 0 ? (
+          <div className="flex items-center justify-center h-20 text-gray-500 text-sm">
+            No strips
+          </div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {strips.map((strip, index) => (
               <motion.div
                 key={strip.id}
                 layout
@@ -86,11 +91,11 @@ export default function Bay({ id, name, type, runway }: BayProps) {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.2 }}
               >
-                <FlightStripCard strip={strip} index={index} />
+                <FlightStripCard strip={strip} index={index} onDoubleClick={onStripDoubleClick} />
               </motion.div>
-            ))
-          )}
-        </AnimatePresence>
+            ))}
+          </AnimatePresence>
+        )}
       </div>
     </div>
   );

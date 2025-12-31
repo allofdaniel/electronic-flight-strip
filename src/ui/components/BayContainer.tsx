@@ -1,7 +1,11 @@
 import { useMemo } from 'react';
 import Bay from './Bay';
 import { useSystemStore } from '../../core/store/systemStore';
-import type { BayType } from '../../types/index';
+import type { BayType, FlightStrip } from '../../types/index';
+
+interface BayContainerProps {
+  onStripDoubleClick?: (strip: FlightStrip) => void;
+}
 
 // Default bay configuration for demonstration
 const DEFAULT_BAYS = [
@@ -14,7 +18,7 @@ const DEFAULT_BAYS = [
   { id: 'arrival', name: 'ARRIVAL', type: 'ARRIVAL' as BayType, position: 6, controllerRole: 'TOWER' },
 ];
 
-export default function BayContainer() {
+export default function BayContainer({ onStripDoubleClick }: BayContainerProps) {
   const { bays: configuredBays } = useSystemStore();
 
   // Use configured bays or default bays
@@ -37,6 +41,7 @@ export default function BayContainer() {
           name={bay.name}
           type={bay.type}
           runway={bay.runway}
+          onStripDoubleClick={onStripDoubleClick}
         />
       ))}
     </div>
